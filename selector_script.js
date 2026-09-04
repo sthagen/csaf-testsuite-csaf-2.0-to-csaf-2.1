@@ -1,12 +1,12 @@
 /**
  * Script that shows the a selector when clicking on a bullet point or when doing a selection.
- * 
+ *
  * Currently this can be pasted into the browser console on
  * https://docs.oasis-open.org/csaf/csaf/v2.1/csaf-v2.1.html#conformance-clause-18-csaf-2-0-to-csaf-2-1-converter
  * and then works in section 9.1.18 (any behavior outside of that section is unintentional).
- * 
+ *
  * This is just temporary. In the future, the script is intended to be embedded into an HTML file.
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  * SPDX-FileCopyrightText: 2026 German Federal Office for Information Security (BSI) <https://www.bsi.bund.de>
  * Software-Engineering: 2026 Intevation GmbH <https://intevation.de>
@@ -96,31 +96,8 @@ function getListPath(li) {
   return path.join(" ");
 }
 
-function getSelectedListItem() {
-  const selection = window.getSelection();
-
-  if (!selection || !selection.rangeCount) {
-    return null;
-  }
-
-  const range = selection.getRangeAt(0);
-
-  const node =
-    range.commonAncestorContainer.nodeType === Node.TEXT_NODE
-      ? range.commonAncestorContainer.parentElement
-      : range.commonAncestorContainer;
-
-  const li = node?.closest?.("li");
-
-  if (!li || !li.parentElement?.matches("ul, ol")) {
-    return null;
-  }
-
-  return li;
-}
-
-// Normal click
 document.querySelectorAll("li").forEach((li) => {
+  // Normal click
   li.addEventListener("click", (event) => {
     // Don't also fire the click path when the click finished a text selection.
     const selection = window.getSelection();
@@ -137,36 +114,35 @@ document.querySelectorAll("li").forEach((li) => {
 
     setLocator(selectorObj);
   });
-});
 
-// Text selection inside a UL/OL
-document.addEventListener("mouseup", () => {
-  const selection = window.getSelection();
-  const selectedText = normalizeLocatorText(selection?.toString() ?? "");
+  // Text selection inside a UL/OL
+  li.addEventListener("mouseup", () => {
+    const selection = window.getSelection();
+    const selectedText = normalizeLocatorText(selection?.toString() ?? "");
 
-  if (!selectedText || !selection.rangeCount) {
-    return;
-  }
+    if (!selectedText || !selection?.rangeCount) {
+      return;
+    }
 
-  const li = getSelectedListItem();
+    const selectedRange = selection.getRangeAt(0);
 
-  if (!li) {
-    return;
-  }
+    if (!li.contains(selectedRange.commonAncestorContainer)) {
+      return;
+    }
 
-  const path = getListPath(li);
-  const selectedRange = selection.getRangeAt(0);
+    event.stopPropagation();
 
-  highlightRange(selectedRange);
+    highlightRange(selectedRange);
 
-  const occurrence = getTextOccurrence(li, selectedText, selectedRange);
+    const occurrence = getTextOccurrence(li, selectedText, selectedRange);
 
-  const selectorObj = JSON.stringify([
-    getListPath(li),
-    [selectedText, occurrence ?? 1],
-  ]);
+    const selectorObj = JSON.stringify([
+      getListPath(li),
+      [selectedText, occurrence ?? 1],
+    ]);
 
-  setLocator(selectorObj);
+    setLocator(selectorObj);
+  });
 });
 
 function getNormalizedTextWithPositions(root) {

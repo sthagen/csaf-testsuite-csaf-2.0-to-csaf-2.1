@@ -5,9 +5,13 @@
 [project]
 name = "csaf-20-to-21-converter-test-tools"
 dynamic = ["version"]
+requires-python = ">=3.10"
 dependencies = [
   # needed for prototype_runtests.py
-  "jsonpath-rfc9535>=1.0.0"
+  "jsonpath-rfc9535>=1.0.0",
+  # needed for visualizer.py
+  "markdown",
+  "mdx_truly_sane_lists"
 ]
 
 # we do not really want to build and distribute something for this repo
